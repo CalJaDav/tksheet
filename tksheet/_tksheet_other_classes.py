@@ -271,9 +271,9 @@ def get_rc_binding():
     else:
         return "<3>"
         
-def wrap_text(text: str, max_len: int, str_len: Callable[[str], int], delims = [',' , '-', '_', "\\", "/", ".", "="]) -> list[str]:
-
-    min_len = str_len('_')+1
+def wrap_text(text: str, max_len: int, char_len: int, delims = [',' , '-', '_', "\\", "/", ".", "="]) -> list[str]:
+    
+    min_len = char_len+1
     if max_len < min_len:
         max_len = min_len
     try:
@@ -282,11 +282,11 @@ def wrap_text(text: str, max_len: int, str_len: Callable[[str], int], delims = [
     except:
         lines = text.splitlines()
         wrapped_lines = []
-        whitespace_len = str_len(' ')
+        whitespace_len = char_len
         i = 0
         while i < len(lines):
             line = lines[i]
-            line_len = str_len(line)
+            line_len = len(line)*char_len
             if line_len <= max_len:
                 wrapped_lines.append(line)
             else:
@@ -302,9 +302,9 @@ def wrap_text(text: str, max_len: int, str_len: Callable[[str], int], delims = [
                 current_line_len = 0
                 wrapped_line = ''
                 for j, word in enumerate(words):
-                    word_len = str_len(word)
+                    word_len = len(word)*char_len
                     if current_line_len + word_len <= max_len:
-                        wrapped_line += (word if j==0 else ' ' + word if words[j-1][-1] not in delims else word)
+                        wrapped_line += (word if j==0 else ' ' + word)
                         current_line_len += word_len + whitespace_len if j!=0 else word_len
 
                     else:
@@ -314,7 +314,7 @@ def wrap_text(text: str, max_len: int, str_len: Callable[[str], int], delims = [
                             max_chars = 0
                             for k in range(1, len(word)):
                                 # Start from end of word and work backwards until the word fits
-                                if str_len(word[:-k]) <= max_len:
+                                if len(word[:-k])*char_len <= max_len:
                                     max_chars = len(word)-k
                                     break
                             #split word into two lines and add the first to wrapped_lines and insert the second into the next position in lines

@@ -4113,6 +4113,7 @@ class MainTable(tk.Canvas):
 
     def main_table_redraw_grid_and_text(self, redraw_header = False, redraw_row_index = False, redraw_table = True):
         try:
+            char_w = self.GetTextWidth('_')
             last_col_line_pos = self.col_positions[-1] + 1
             last_row_line_pos = self.row_positions[-1] + 1
             can_width = self.winfo_width()
@@ -4353,7 +4354,7 @@ class MainTable(tk.Canvas):
                             lns = self.cell_options[(r, dcol)]['checkbox']['text'].split("\n") if isinstance(self.cell_options[(r, dcol)]['checkbox']['text'], str) else f"{self.cell_options[(r, dcol)]['checkbox']['text']}".split("\n")
                         elif len(self.data) > r and len(self.data[r]) > dcol:
                             if wrap:
-                                lns = wrap_text(self.data[r][dcol], mw-2, self.GetTextWidth)
+                                lns = wrap_text(self.data[r][dcol], mw-2, char_w)
                             else:
                                 lns = self.data[r][dcol].split("\n") if isinstance(self.data[r][dcol], str) else f"{self.data[r][dcol]}".split("\n")
                         else:
