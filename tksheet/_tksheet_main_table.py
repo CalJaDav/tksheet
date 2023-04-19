@@ -1370,6 +1370,76 @@ class MainTable(tk.Canvas):
                     self.cell_options[(row, column)] = {}
                 self.cell_options[(row, column)]['align'] = align
 
+    def wrap_cells(self, row = 0, column = 0, cells = [], wrap = True):
+        if isinstance(row, str) and row.lower() == "all" and not wrap: 
+            for (r, c) in self.cell_options:
+                if 'wrap' in self.cell_options[(r, c)]:
+                    del self.cell_options[(r, c)]['wrap']
+            return
+        if isinstance(cells, dict):
+            for (r, c), _wrap in cells.items():
+                if _wrap:
+                    if (r, c) not in self.cell_options:
+                        self.cell_options[(r, c)] = {}
+                    self.cell_options[(r, c)]['wrap'] = True
+                else:
+                    if (r, c) in self.cell_options and 'wrap' in self.cell_options[(r, c)]:
+                        del self.cell_options[(r, c)]['wrap']
+            return
+        if not wrap:
+            if cells:
+                for r, c in cells:
+                    if (r, c) in self.cell_options and 'wrap' in self.cell_options[(r, c)]:
+                        del self.cell_options[(r, c)]['wrap']
+            else:
+                if (row, column) in self.cell_options and 'wrap' in self.cell_options[(row, column)]:
+                    del self.cell_options[(row, column)]['wrap']
+        else:
+            if cells:
+                for r, c in cells:
+                    if (r, c) not in self.cell_options:
+                        self.cell_options[(r, c)] = {}
+                    self.cell_options[(r, c)]['wrap'] = True
+
+            else:
+                if (row, column) not in self.cell_options:
+                    self.cell_options[(row, column)] = {}
+                self.cell_options[(row, column)]['wrap'] = True
+    
+    def wrap_rows(self, rows = [], wrap = True):
+        if isinstance(rows, int):
+            rows_ = [rows]
+        elif isinstance(rows, str) and rows.lower() == "all":
+            rows_ = (r for r in range(self.total_data_rows()))
+        else:
+            rows_ = rows
+        if not wrap:
+            for r in rows_:
+                if r in self.row_options and 'wrap' in self.row_options[r]:
+                    del self.row_options[r]['wrap']
+        else:
+            for r in rows_:
+                if r not in self.row_options:
+                    self.row_options[r] = {}
+                self.row_options[r]['wrap'] = True
+    
+    def wrap_columns(self, columns = [], wrap = True):
+        if isinstance(columns, int):
+            cols_ = [columns]
+        elif isinstance(columns, str) and columns.lower() == "all":
+            cols_ = (c for c in range(self.total_data_cols()))
+        else:
+            cols_ = columns
+        if not wrap:
+            for c in cols_:
+                if c in self.col_options and 'wrap' in self.col_options[c]:
+                    del self.col_options[c]['wrap']
+        else:
+            for c in cols_:
+                if c not in self.col_options:
+                    self.col_options[c] = {}
+                self.col_options[c]['wrap'] = True
+
     def readonly_rows(self, rows = [], readonly = True):
         if isinstance(rows, int):
             rows_ = [rows]
@@ -4212,6 +4282,15 @@ class MainTable(tk.Canvas):
                         else:
                             align = self.align
                         
+                        if (r, dcol) in self.cell_options and 'wrap' in self.cell_options[(r, dcol)]: 
+                            wrap = True
+                        elif r in self.row_options and 'wrap' in self.row_options[r]:
+                            wrap = True
+                        elif dcol in self.col_options and 'wrap' in self.col_options[dcol]:
+                            wrap = True
+                        else:
+                            wrap = False
+                        
                         if align == "w":
                             draw_x = cleftgridln + 3
                             if (r, dcol) in self.cell_options and 'dropdown' in self.cell_options[(r, dcol)]:
@@ -4273,7 +4352,10 @@ class MainTable(tk.Canvas):
                         if (r, dcol) in self.cell_options and 'checkbox' in self.cell_options[(r, dcol)]:
                             lns = self.cell_options[(r, dcol)]['checkbox']['text'].split("\n") if isinstance(self.cell_options[(r, dcol)]['checkbox']['text'], str) else f"{self.cell_options[(r, dcol)]['checkbox']['text']}".split("\n")
                         elif len(self.data) > r and len(self.data[r]) > dcol:
-                            lns = self.data[r][dcol].split("\n") if isinstance(self.data[r][dcol], str) else f"{self.data[r][dcol]}".split("\n")
+                            if wrap:
+                                lns = wrap_text(self.data[r][dcol], mw-2, self.GetTextWidth)
+                            else:
+                                lns = self.data[r][dcol].split("\n") if isinstance(self.data[r][dcol], str) else f"{self.data[r][dcol]}".split("\n")
                         else:
                             continue
                         if lns != [''] and mw > self.txt_w and not ((align == "w" and draw_x > scrollpos_right) or
@@ -4395,7 +4477,7 @@ class MainTable(tk.Canvas):
                 self.CH.redraw_grid_and_text(last_col_line_pos, scrollpos_left, x_stop, start_col, end_col, selected_cols, actual_selected_rows, actual_selected_cols)
             if redraw_row_index and self.show_index:
                 self.RI.redraw_grid_and_text(last_row_line_pos, scrollpos_top, y_stop, start_row, end_row + 1, scrollpos_bot, selected_rows, actual_selected_cols, actual_selected_rows)
-        except:
+        except Exception as ex:
             return False
         return True
 

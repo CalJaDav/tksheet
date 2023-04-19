@@ -2,7 +2,7 @@ from ._tksheet_vars import *
 from collections import namedtuple
 from itertools import islice
 import tkinter as tk
-
+from typing import Union, List, Tuple, Dict, Any, Optional, Callable, Iterable, Sequence, TypeVar, Generic, Type, cast, overload
 
 CurrentlySelectedClass = namedtuple("CurrentlySelectedClass", "row column type_")
 CtrlKeyEvent = namedtuple("CtrlKeyEvent", "eventname selectionboxes currentlyselected rows")
@@ -271,3 +271,61 @@ def get_rc_binding():
     else:
         return "<3>"
         
+def wrap_text(text: str, max_len: int, str_len: Callable[[str], int], delims = [',' , '-', '_', "\\", "/", ".", "="]) -> list[str]:
+
+    min_len = str_len('_')+1
+    if max_len < min_len:
+        max_len = min_len
+    try:
+        float(text)
+        return [text] # if it is a number don't wrap it
+    except:
+        lines = text.splitlines()
+        wrapped_lines = []
+        whitespace_len = str_len(' ')
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            line_len = str_len(line)
+            if line_len <= max_len:
+                wrapped_lines.append(line)
+            else:
+                words = line.split(' ')
+                for delim in delims:
+                    new_words = []
+                    for word in words:
+                        new_split = word.split(delim)
+                        if len(new_split) > 1:
+                            new_split[:-1] = [w+delim for w in new_split[:-1]]
+                        new_words += [w for w in new_split if w != '']
+                    words = new_words
+                current_line_len = 0
+                wrapped_line = ''
+                for j, word in enumerate(words):
+                    word_len = str_len(word)
+                    if current_line_len + word_len <= max_len:
+                        wrapped_line += (word if j==0 else ' ' + word if words[j-1][-1] not in delims else word)
+                        current_line_len += word_len + whitespace_len if j!=0 else word_len
+
+                    else:
+                        
+                        if j == 0:
+                            # if it is the first word of the line find the max number of characters that can fit on the line
+                            max_chars = 0
+                            for k in range(1, len(word)):
+                                # Start from end of word and work backwards until the word fits
+                                if str_len(word[:-k]) <= max_len:
+                                    max_chars = len(word)-k
+                                    break
+                            #split word into two lines and add the first to wrapped_lines and insert the second into the next position in lines
+                            wrapped_lines.append(word[:max_chars])
+                            lines.insert(i+1, line[max_chars:])
+                            break
+                        else:
+                            # add the wrapped line to wrapped_lines and insert the rest of the line into the next position in lines
+                            wrapped_lines.append(wrapped_line)
+                            break_char = len(wrapped_line) + 1
+                            lines.insert(i+1, line[break_char:])
+                            break
+            i += 1
+        return wrapped_lines

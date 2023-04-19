@@ -1674,6 +1674,29 @@ class Sheet(tk.Frame):
         if redraw:
             self.refresh()
 
+    def wrap_cells(self, row = 0, column = 0, cells = [], wrap = True, redraw = True):
+        self.MT.wrap_cells(row = row,
+                           column = column,
+                           cells = cells,
+                           wrap = wrap)
+        
+        if redraw:
+            self.redraw()
+    
+    def wrap_columns(self, columns = [], wrap = True, redraw = True):
+        self.MT.wrap_columns(columns = columns,
+                             wrap = wrap)
+        
+        if redraw:
+            self.redraw()
+    
+    def wrap_rows(self, rows = [], wrap = True, redraw = True):
+        self.MT.wrap_rows(rows = rows,
+                          wrap = wrap)
+        
+        if redraw:
+            self.redraw()
+
     def font(self, newfont = None, reset_row_positions = True):
         self.MT.font(newfont, reset_row_positions = reset_row_positions)
 
