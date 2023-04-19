@@ -11,7 +11,7 @@ import io
 import pickle
 import tkinter as tk
 import zlib
-
+from textwrap import TextWrapper
 
 class MainTable(tk.Canvas):
     def __init__(self,
@@ -254,6 +254,7 @@ class MainTable(tk.Canvas):
         self.empty_rc_popup_menu = None
         self.basic_bindings()
         self.create_rc_menus()
+        self.text_wrapper = TextWrapper() 
         
     def refresh(self, event = None):
         self.main_table_redraw_grid_and_text(True, True)
@@ -4113,7 +4114,6 @@ class MainTable(tk.Canvas):
 
     def main_table_redraw_grid_and_text(self, redraw_header = False, redraw_row_index = False, redraw_table = True):
         try:
-            char_w = self.GetTextWidth('_')
             last_col_line_pos = self.col_positions[-1] + 1
             last_row_line_pos = self.row_positions[-1] + 1
             can_width = self.winfo_width()
@@ -4257,6 +4257,15 @@ class MainTable(tk.Canvas):
             font = self._font
             if redraw_table:
                 for c in range(start_col, end_col - 1):
+                    cleftgridln = self.col_positions[c]
+                    crightgridln = self.col_positions[c + 1]
+
+                    if self.all_columns_displayed:
+                        dcol = c
+                    else:
+                        dcol = self.displayed_columns[c]
+
+                    
                     for r in rows_:
                         rtopgridln = self.row_positions[r]
                         rbotgridln = self.row_positions[r + 1]
@@ -4264,14 +4273,7 @@ class MainTable(tk.Canvas):
                             continue
                         if rbotgridln > scrollpos_bot_add2:
                             rbotgridln = scrollpos_bot_add2
-                        cleftgridln = self.col_positions[c]
-                        crightgridln = self.col_positions[c + 1]
-                        
-                        if self.all_columns_displayed:
-                            dcol = c
-                        else:
-                            dcol = self.displayed_columns[c]
-                        
+
                         fill, dd_drawn = self.redraw_highlight_get_text_fg(r, c, cleftgridln, rtopgridln, crightgridln, rbotgridln, c_2_, c_3_, c_4_, selected_cells, actual_selected_rows, actual_selected_cols, dcol, can_width)
                             
                         if (r, dcol) in self.cell_options and 'align' in self.cell_options[(r, dcol)]:
@@ -4354,7 +4356,8 @@ class MainTable(tk.Canvas):
                             lns = self.cell_options[(r, dcol)]['checkbox']['text'].split("\n") if isinstance(self.cell_options[(r, dcol)]['checkbox']['text'], str) else f"{self.cell_options[(r, dcol)]['checkbox']['text']}".split("\n")
                         elif len(self.data) > r and len(self.data[r]) > dcol:
                             if wrap:
-                                lns = wrap_text(self.data[r][dcol], mw-2, char_w)
+                                self.text_wrapper.width = self.GetWidthChars(mw)
+                                lns = self.text_wrapper.wrap(f"{self.data[r][dcol]}")
                             else:
                                 lns = self.data[r][dcol].split("\n") if isinstance(self.data[r][dcol], str) else f"{self.data[r][dcol]}".split("\n")
                         else:
